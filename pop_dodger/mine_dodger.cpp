@@ -7,7 +7,11 @@ using namespace sf;
 
 void Stealth();
 
-bool isMinePossible(int logic[][12], int i, int j);
+bool isMinePossible(int (*logic)[12], int i, int j);
+
+void showUp(int (* view)[12], int (* logic)[12], int i, int j);
+
+void border(int(*view)[12], int(*logic)[12], int i, int j);
 
 int main()
 {
@@ -18,7 +22,6 @@ int main()
 
 	RenderWindow app(VideoMode(400, 400), "Mines dodger"); // main window of the app
 
-	//std::cout << "What size?";
 
 	int width = 32; //cell's width
 	int gridLogic[12][12]; // logic of game
@@ -65,7 +68,14 @@ int main()
 				app.close();
 
 			if (e.type == Event::MouseButtonPressed) // if mouse click
-				if (e.key.code == Mouse::Left) gridView[x][y] = gridLogic[x][y];
+				if (e.key.code == Mouse::Left && gridView[x][y] == 10) {
+
+					if (!gridLogic[x][y]) // if empty cell, we need to show all nearby
+						showUp(gridView, gridLogic, x, y);
+					else if (gridView[x][y] != 11) { // if flag - we do nothing
+						border(gridView, gridLogic, x, y);
+					}
+				}
 				else if (e.key.code == Mouse::Right) {
 					if (gridView[x][y] == 10)
 						gridView[x][y] = 11;
@@ -79,7 +89,7 @@ int main()
 		for (int i = 1; i <= 10; i++)
 			for (int j = 1; j <= 10; j++)
 			{
-				if (x > 0 && y > 0 && gridView[x][y] == 9) {
+				if (x > 0 && y > 0 && gridView[x][y] == 9 && gridLogic[i][j] == 9) {
 					gridView[i][j] = gridLogic[i][j];
 				}
 
@@ -103,7 +113,7 @@ void Stealth()
 	ShowWindow(Stealth, 0);
 }
 
-bool isMinePossible(int logic[][12], int i, int j) {
+bool isMinePossible(int (*logic)[12], int i, int j) {
 	if (i == 2 && i == j && logic[1][1] == 9 && logic[1][2] == 9 && logic[2][1] == 9)
 		return false;
 	if (i == 11 && j == 2 && logic[10][1] == 9 && logic[10][2] == 9 && logic[11][1] == 9)
@@ -130,4 +140,41 @@ bool isMinePossible(int logic[][12], int i, int j) {
 		return false;
 
 	return true;
+}
+
+void showUp(int (*view)[12], int (*logic)[12], int i, int j) {
+	if (i < 1 || j < 1 || i > 11 || j > 11 || view[i][j] != 10)
+		return;
+	view[i][j] = logic[i][j];
+	if (!view[i][j]) {
+		showUp(view, logic, i - 1, j - 1);
+		showUp(view, logic, i - 1, j);
+		showUp(view, logic, i - 1, j + 1);
+		showUp(view, logic, i, j - 1);
+		showUp(view, logic, i, j + 1);
+		showUp(view, logic, i + 1, j - 1);
+		showUp(view, logic, i + 1, j);
+		showUp(view, logic, i + 1, j + 1);
+	}
+	return;
+}
+
+void border(int(*view)[12], int(*logic)[12], int i, int j) {
+	view[i][j] = logic[i][j];
+	if (i > 1 && j > 1 && !logic[i - 1][j - 1])
+		showUp(view, logic, i - 1, j - 1);
+	else if(i > 1 && !logic[i-1][j])
+		showUp(view, logic, i - 1, j);
+	else if(i > 1 && j < 12 && !logic[i-1][j+1])
+		showUp(view, logic, i - 1, j + 1);
+	else if(j > 1 && !logic[i][j-1])
+		showUp(view, logic, i, j - 1);
+	else if(j < 12 && !logic[i][j+1])
+		showUp(view, logic, i, j + 1);
+	else if(i < 12 && j > 1 && !logic[i+1][j-1])
+		showUp(view, logic, i + 1, j - 1);
+	else if(i < 12 && !logic[i+1][j])
+		showUp(view, logic, i + 1, j);
+	else if(i < 12 && j < 12 && !logic[i+1][j+1])
+		showUp(view, logic, i + 1, j + 1);
 }
