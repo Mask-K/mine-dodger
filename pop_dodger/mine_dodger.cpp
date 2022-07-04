@@ -1,17 +1,20 @@
-#include <SFML/Graphics.hpp>
+п»ї#include <SFML/Graphics.hpp>
 #include <iostream>
 #include <random>
 #include <windows.h>
+#include <vector>
 
 using namespace sf;
 
+const int N = 10;
+
 void Stealth();
 
-bool isMinePossible(int (*logic)[12], int i, int j);
+bool isMinePossible(int (*logic)[N], int i, int j);
 
-void showUp(int (* view)[12], int (* logic)[12], int i, int j);
+void showUp(int (* view)[N], int (* logic)[N], int i, int j);
 
-void border(int(*view)[12], int(*logic)[12], int i, int j);
+void border(int(*view)[N], int(*logic)[N], int i, int j);
 
 int main()
 {
@@ -24,42 +27,45 @@ int main()
 
 
 	int width = 32; //cell's width
-	int gridLogic[12][12]; // logic of game
-	int gridView[12][12]; // what we actually see
+	std::vector<int> a(N);
+	int gridLogic[N][N]; // logic of game
+	int gridView[N][N]; // what we actually see
 
 	Texture t;
-	t.loadFromFile(R"(D:\Програмування\CumBack\pop_dodger\x64\Debug\tiles.jpg)"); // making texture + sprite
+	t.loadFromFile(R"(D:\РџСЂРѕРіСЂР°РјСѓРІР°РЅРЅСЏ\CumBack\pop_dodger\x64\Debug\tiles.jpg)"); // making texture + sprite
 	Sprite s(t);
 
-	for (int i = 1; i <= 10; i++) // randomly deside what cell will have a mine
-		for (int j = 1; j <= 10; j++)
+	for (int i = 0; i < N; i++) // randomly deside what cell will have a mine
+		for (int j = 0; j < N; j++)
 		{
 			gridView[i][j] = 10;
 			if (mersenne() % 5 == 0 && isMinePossible(gridLogic, i, j))  gridLogic[i][j] = 9;
 			else gridLogic[i][j] = 0;
 		}
 
-	for (int i = 1; i <= 10; i++) // fill logic grid with apropriate numbers
-		for (int j = 1; j <= 10; j++)
+	for (int i = 0; i < N; i++) // fill logic grid with apropriate numbers
+		for (int j = 0; j < N; j++)
 		{
 			int n = 0;
 			if (gridLogic[i][j] == 9) continue;
-			if (gridLogic[i + 1][j] == 9) n++;
-			if (gridLogic[i][j + 1] == 9) n++;
-			if (gridLogic[i - 1][j] == 9) n++;
-			if (gridLogic[i][j - 1] == 9) n++;
-			if (gridLogic[i + 1][j + 1] == 9) n++;
-			if (gridLogic[i - 1][j - 1] == 9) n++;
-			if (gridLogic[i - 1][j + 1] == 9) n++;
-			if (gridLogic[i + 1][j - 1] == 9) n++;
+			if (i < N - 1 && gridLogic[i + 1][j] == 9) n++;
+			if (j < N - 1 && gridLogic[i][j + 1] == 9) n++;
+			if (i > 0 && gridLogic[i - 1][j] == 9) n++;
+			if (j > 0 && gridLogic[i][j - 1] == 9) n++;
+			if (i < N - 1 && j < N - 1 && gridLogic[i + 1][j + 1] == 9) n++;
+			if (i > 0 && j > 0 && gridLogic[i - 1][j - 1] == 9) n++;
+			if (i > 0 && j < N - 1 && gridLogic[i - 1][j + 1] == 9) n++;
+			if (i < N - 1 && j > 0 && gridLogic[i + 1][j - 1] == 9) n++;
 			gridLogic[i][j] = n;
 		}
 
 	while (app.isOpen())
 	{
 		Vector2i pos = Mouse::getPosition(app); // find the position of mouse when clicking
-		int x = pos.x / width;
-		int y = pos.y / width;
+		int x = pos.x / width - 1;
+		int y = pos.y / width - 1;
+		
+		
 
 		Event e;
 		while (app.pollEvent(e))
@@ -86,16 +92,16 @@ int main()
 
 		app.clear(Color::White); // white background
 
-		for (int i = 1; i <= 10; i++)
-			for (int j = 1; j <= 10; j++)
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < N; j++)
 			{
-				if (x > 0 && y > 0 && gridView[x][y] == 9 && gridLogic[i][j] == 9) {
+				if (x >= 0 && y >= 0 && gridView[x][y] == 9 && gridLogic[i][j] == 9) {
 					gridView[i][j] = gridLogic[i][j];
 				}
 
 				s.setTextureRect(IntRect(gridView[i][j] * width, 0, width, width)); // get concrete sprite
 
-				s.setPosition(i * width, j * width); // insert obtained sprite
+				s.setPosition((i + 1) * width, (j + 1) * width); // insert obtained sprite
 
 				app.draw(s); // draw it
 			}
@@ -113,28 +119,28 @@ void Stealth()
 	ShowWindow(Stealth, 0);
 }
 
-bool isMinePossible(int (*logic)[12], int i, int j) {
-	if (i == 2 && i == j && logic[1][1] == 9 && logic[1][2] == 9 && logic[2][1] == 9)
+bool isMinePossible(int (*logic)[N], int i, int j) {
+	if (i == 1 && i == 1 && logic[i-1][j-1] == 9 && logic[i-1][j] == 9 && logic[i][j-1] == 9)
 		return false;
-	if (i == 11 && j == 2 && logic[10][1] == 9 && logic[10][2] == 9 && logic[11][1] == 9)
+	if (i == N-1 && j == 1 && logic[i-1][j-1] == 9 && logic[i-1][j] == 9 && logic[i][j-1] == 9)
 		return false;
-	if (i == 11 && j == 11 && logic[10][10] == 9 && logic[10][11] == 9 && logic[11][10 == 9])
+	if (i == N-1 && j == N - 1 && logic[i-1][j-1] == 9 && logic[i-1][j] == 9 && logic[i][j-1] == 9)
 		return false;
-	if (i == 2 && j == 11 && logic[1][10] == 9 && logic[1][11] == 9 && logic[2][10] == 9)
+	if (i == 1 && j == N-1 && logic[i-1][j-1] == 9 && logic[i-1][j] == 9 && logic[i][j-1] == 9)
 		return false;
-	if (i == 2 && j > 2 && logic[i - 1][j - 2] == 9 && logic[i - 1][j - 1] == 9 && logic[i - 1][j] == 9 
+	if (i == 1 && j > 1 && logic[i - 1][j - 2] == 9 && logic[i - 1][j - 1] == 9 && logic[i - 1][j] == 9 
 		&& logic[i][j - 2] == 9 && logic[i][j - 1] == 9)
 		return false;
-	if (i == 11 && j > 2 && logic[i - 1][j - 2] == 9 && logic[i - 1][j - 1] == 9 && logic[i - 1][j] == 9
+	if (i == N-1 && j > 1 && logic[i - 1][j - 2] == 9 && logic[i - 1][j - 1] == 9 && logic[i - 1][j] == 9
 		&& logic[i][j - 2] == 9 && logic[i][j - 1] == 9)
 		return false;
-	if (j == 2 && i > 2 && logic[i - 2][j - 1] == 9 && logic[i - 2][j] == 9 && logic[i - 1][j - 1] == 9 
+	if (j == 1 && i > 1 && logic[i - 2][j - 1] == 9 && logic[i - 2][j] == 9 && logic[i - 1][j - 1] == 9 
 		&& logic[i - 1][j] == 9 && logic[i][j - 1] == 9)
 		return false;
-	if (j == 1 && i > 2 && logic[i - 2][j - 1] == 9 && logic[i - 2][j] == 9 && logic[i - 1][j - 1] == 9
+	if (j == N - 1 && i > 1 && logic[i - 2][j - 1] == 9 && logic[i - 2][j] == 9 && logic[i - 1][j - 1] == 9
 		&& logic[i - 1][j] == 9 && logic[i][j - 1] == 9)
 		return false;
-	if (i > 2 && j > 2 && i < 10 && j < 10 && logic[i - 2][j - 2] == 9 && logic[i - 2][j - 1] == 9 && logic[i - 2][j] == 9 
+	if (i > 1 && j > 1 && i < N-2 && j < N-2 && logic[i - 2][j - 2] == 9 && logic[i - 2][j - 1] == 9 && logic[i - 2][j] == 9 
 		&& logic[i - 1][j - 2] == 9 && logic[i - 1][j - 1] == 9 && logic[i - 1][j] == 9 
 		&& logic[i][j - 2] == 9 && logic[i][j - 1] == 9)
 		return false;
@@ -142,8 +148,8 @@ bool isMinePossible(int (*logic)[12], int i, int j) {
 	return true;
 }
 
-void showUp(int (*view)[12], int (*logic)[12], int i, int j) {
-	if (i < 1 || j < 1 || i > 11 || j > 11 || view[i][j] != 10)
+void showUp(int (*view)[N], int (*logic)[N], int i, int j) {
+	if (i < 0 || j < 0 || i == N  || j == N  || view[i][j] != 10)
 		return;
 	view[i][j] = logic[i][j];
 	if (!view[i][j]) {
@@ -159,22 +165,22 @@ void showUp(int (*view)[12], int (*logic)[12], int i, int j) {
 	return;
 }
 
-void border(int(*view)[12], int(*logic)[12], int i, int j) {
+void border(int(*view)[N], int(*logic)[N], int i, int j) {
 	view[i][j] = logic[i][j];
-	if (i > 1 && j > 1 && !logic[i - 1][j - 1])
+	if (i > 0 && j > 0 && !logic[i - 1][j - 1])
 		showUp(view, logic, i - 1, j - 1);
-	else if(i > 1 && !logic[i-1][j])
+	else if(i > 0 && !logic[i-1][j])
 		showUp(view, logic, i - 1, j);
-	else if(i > 1 && j < 12 && !logic[i-1][j+1])
+	else if(i > 0 && j < N - 1 && !logic[i-1][j+1])
 		showUp(view, logic, i - 1, j + 1);
-	else if(j > 1 && !logic[i][j-1])
+	else if(j > 0 && !logic[i][j-1])
 		showUp(view, logic, i, j - 1);
-	else if(j < 12 && !logic[i][j+1])
+	else if(j < N-1 && !logic[i][j+1])
 		showUp(view, logic, i, j + 1);
-	else if(i < 12 && j > 1 && !logic[i+1][j-1])
+	else if(i < N-1 && j > 0 && !logic[i+1][j-1])
 		showUp(view, logic, i + 1, j - 1);
-	else if(i < 12 && !logic[i+1][j])
+	else if(i < N-1 && !logic[i+1][j])
 		showUp(view, logic, i + 1, j);
-	else if(i < 12 && j < 12 && !logic[i+1][j+1])
+	else if(i < N-1 && j < N-1 && !logic[i+1][j+1])
 		showUp(view, logic, i + 1, j + 1);
 }
